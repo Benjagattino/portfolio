@@ -1,0 +1,117 @@
+{
+  "name": "FLOW-ID-EXAMPLE",
+  "id": "/providers/Microsoft.Flow/flows/FLOW-ID-EXAMPLE",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "Backup status capture (Veeam)",
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "metadata": {
+        "creator": {
+          "type": "User",
+          "tenantId": "00000000-0000-0000-0000-000000000000"
+        },
+        "creationSource": "Portal",
+        "provisioningMethod": "FromDefinition"
+      },
+      "parameters": {
+        "$authentication": {
+          "type": "SecureObject",
+          "defaultValue": {}
+        },
+        "$connections": {
+          "type": "Object",
+          "defaultValue": {}
+        }
+      },
+      "triggers": {
+        "When_new_email_arrives_shared_mailbox": {
+          "type": "OpenApiConnection",
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "inputs": {
+            "parameters": {
+              "mailboxAddress": "admin@example.onmicrosoft.com",
+              "from": "veeam@example.com"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "SharedMailboxOnNewEmailV2"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      },
+      "actions": {
+        "Get_items": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://example.sharepoint.com/sites/IT",
+              "table": "LIST-GUID-EXAMPLE",
+              "$filter": "Title eq '@{variables('JobName')}'"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetItems"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Initialize_today": {
+          "type": "InitializeVariable",
+          "runAfter": {
+            "Get_items": [
+              "Succeeded"
+            ]
+          },
+          "inputs": {
+            "variables": [
+              {
+                "name": "Today",
+                "type": "string",
+                "value": "@formatDateTime(utcNow(),'yyyy-MM-dd')"
+              }
+            ]
+          }
+        },
+        "Initialize_yesterday": {
+          "type": "InitializeVariable",
+          "runAfter": {
+            "Initialize_today": [
+              "Succeeded"
+            ]
+          },
+          "inputs": {
+            "variables": [
+              {
+                "name": "Yesterday",
+                "type": "string",
+                "value": "@formatDateTime(addDays(utcNow(),-1),'yyyy-MM-dd')"
+              }
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_office365": {
+        "apiName": "office365",
+        "source": "Embedded"
+      },
+      "shared_sharepointonline": {
+        "apiName": "sharepointonline",
+        "source": "Embedded"
+      }
+    },
+    "isManaged": false
+  }
+}
