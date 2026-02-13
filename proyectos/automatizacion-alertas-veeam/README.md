@@ -42,7 +42,7 @@ Se desarrolló un flujo de automatización que:
 
 ---
 
-## 🧠 Lógica de funcionamiento (alto nivel)
+## 🧠 Lógica de funcionamiento 
 
 1. Veeam envía alertas por correo ante cada ejecución
 2. Power Automate detecta nuevos correos del remitente configurado
